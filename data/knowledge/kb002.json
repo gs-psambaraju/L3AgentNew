@@ -1,0 +1,9 @@
+{
+  "articleId": "KB002",
+  "title": "Troubleshooting Salesforce API Connection Timeouts",
+  "content": "## Issue\nConnection timeouts when connecting to Salesforce API through the DUCT service. This typically appears as 'Connection timeout for Salesforce API: Operation timed out after 30 seconds' in the logs.\n\n## Root Cause\nThere are several potential causes for this issue:\n1. Network latency between the server and Salesforce\n2. Heavy load on the Salesforce instance\n3. DUCT service timeout settings too low for the operation being performed\n4. Insufficient resources on the server running the connector\n\n## Solution\n1. **Increase timeout settings**:\n   - In the DUCT configuration, increase the default timeout from 30 to 60 seconds for Salesforce connections\n   - Location: `/config/connectors/salesforce-config.json`\n\n2. **Optimize API calls**:\n   - Use batch operations instead of individual calls\n   - Implement retry logic with exponential backoff\n   - Consider scheduling large operations during off-peak hours\n\n3. **Check network connectivity**:\n   - Verify network latency to Salesforce API endpoints\n   - Ensure firewall rules allow consistent connection\n\n## Prevention\nMonitor connection times and implement proactive alerts when they start to increase, before they reach timeout thresholds.",
+  "tags": ["Salesforce", "API", "timeout", "connection", "gs-duct", "performance"],
+  "createdAt": "2023-02-10T14:20:00Z",
+  "updatedAt": "2023-05-15T09:45:00Z",
+  "author": "Integration Team"
+} 

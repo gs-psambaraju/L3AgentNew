@@ -1,0 +1,18 @@
+{
+  "ticketId": "TICKET-1234",
+  "subject": "Tasks failing with NullPointerException",
+  "description": "We are seeing multiple tasks failing in the production environment with NullPointerException in TaskProcessor. The error occurs at line 245. This is causing data synchronization issues for our customer Acme Corp.",
+  "priority": "HIGH",
+  "createdAt": "2023-06-01T10:30:00Z",
+  "attachments": [],
+  "status": "NEW",
+  "conversation": [
+    {
+      "messageId": "MSG-001",
+      "source": "SUPPORT_ENGINEER",
+      "content": "I've noticed that the tasks failing have a pattern. They all seem to be missing the targetSystem parameter in their configuration. Could this be related to the issue?",
+      "timestamp": "2023-06-01T10:35:00Z",
+      "type": "QUESTION"
+    }
+  ]
+} 

@@ -1,0 +1,25 @@
+{"timestamp":"2023-06-01T10:25:29Z","level":"INFO","service":"main-app","message":"Application starting with config: dev_mode=true"}
+{"timestamp":"2023-06-01T10:25:30Z","level":"INFO","service":"main-app","message":"Initializing connectors module"}
+{"timestamp":"2023-06-01T10:25:30Z","level":"DEBUG","service":"dp-dynamic-tasks","message":"Dynamic task processor initialized"}
+{"timestamp":"2023-06-01T10:25:31Z","level":"INFO","service":"gs-duct","message":"DUCT service started on port 8080"}
+{"timestamp":"2023-06-01T10:25:32Z","level":"INFO","service":"gs-integrations","message":"Integration service starting"}
+{"timestamp":"2023-06-01T10:25:33Z","level":"INFO","service":"gainsight-adapter","message":"Adapter initialized with 4 connectors"}
+{"timestamp":"2023-06-01T10:26:00Z","level":"WARN","service":"gs-integrations","message":"Slow database connection detected: 2500ms response time"}
+{"timestamp":"2023-06-01T10:27:15Z","level":"ERROR","service":"dp-dynamic-tasks","message":"Failed to process task ID: 34562 - NullPointerException at com.gainsight.tasks.TaskProcessor.execute:245"}
+{"timestamp":"2023-06-01T10:27:16Z","level":"ERROR","service":"dp-dynamic-tasks","message":"Failed to process task ID: 34563 - NullPointerException at com.gainsight.tasks.TaskProcessor.execute:245"}
+{"timestamp":"2023-06-01T10:30:45Z","level":"INFO","service":"gs-duct","message":"Processing connector request for Salesforce"}
+{"timestamp":"2023-06-01T10:31:22Z","level":"ERROR","service":"gs-duct","message":"Connection timeout for Salesforce API: Operation timed out after 30 seconds"}
+{"timestamp":"2023-06-01T10:35:10Z","level":"INFO","service":"gs-integrations","message":"Successfully synchronized 243 records from external system"}
+{"timestamp":"2023-06-01T10:40:05Z","level":"WARN","service":"gainsight-adapter","message":"Rate limit approaching for connector: hubspot (95% of quota used)"}
+{"timestamp":"2023-06-01T10:42:30Z","level":"ERROR","service":"gs-integrations","message":"Authentication failed for API key: aks8f7a9s87fa9s8f7 - Invalid credentials"}
+{"timestamp":"2023-06-01T10:42:35Z","level":"ERROR","service":"gs-integrations","message":"Authentication failed for API key: bjs983jf93jf93jf9 - Invalid credentials"}
+{"timestamp":"2023-06-01T10:45:00Z","level":"INFO","service":"main-app","message":"Scheduled maintenance starting in 15 minutes"}
+{"timestamp":"2023-06-01T10:55:12Z","level":"WARN","service":"gs-duct","message":"Memory usage high: 85% of allocated memory"}
+{"timestamp":"2023-06-01T11:00:00Z","level":"INFO","service":"main-app","message":"Starting scheduled maintenance"}
+{"timestamp":"2023-06-01T11:00:05Z","level":"INFO","service":"dp-dynamic-tasks","message":"Pausing task processor for maintenance"}
+{"timestamp":"2023-06-01T11:00:10Z","level":"INFO","service":"gs-duct","message":"DUCT service stopping for maintenance"}
+{"timestamp":"2023-06-01T11:15:00Z","level":"INFO","service":"main-app","message":"Maintenance completed successfully"}
+{"timestamp":"2023-06-01T11:15:05Z","level":"INFO","service":"dp-dynamic-tasks","message":"Resuming task processor"}
+{"timestamp":"2023-06-01T11:15:10Z","level":"INFO","service":"gs-duct","message":"DUCT service restarted on port 8080"}
+{"timestamp":"2023-06-01T11:20:45Z","level":"ERROR","service":"gainsight-adapter","message":"Database connection failed: Connection refused to db-server-03:5432"}
+{"timestamp":"2023-06-01T11:20:50Z","level":"ERROR","service":"gainsight-adapter","message":"Database connection failed: Connection refused to db-server-03:5432"} 

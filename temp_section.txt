@@ -1,0 +1,400 @@
+        } else if (filePath.endsWith(".xml")) {
+            return "xml configuration";
+        } else if (filePath.endsWith(".properties")) {
+            return "properties configuration";
+        } else if (filePath.endsWith(".yml") || filePath.endsWith(".yaml")) {
+            return "yaml configuration";
+        } else {
+            return "code file";
+        }
+    }
+    
+    /**
+     * Finds all code files in the repository.
+     */
+    private List<Path> findAllCodeFiles() throws IOException {
+        Path basePath = Paths.get(baseCodePath);
+        
+        if (!Files.exists(basePath)) {
+            return new ArrayList<>();
+        }
+        
+        try (Stream<Path> walk = Files.walk(basePath)) {
+            return walk
+                    .filter(Files::isRegularFile)
+                    .filter(this::isCodeFile)
+                    .collect(Collectors.toList());
+        }
+    }
+    
+    /**
+     * Determines if a file is a code file based on extension.
+     */
+    private boolean isCodeFile(Path filePath) {
+        String fileName = filePath.getFileName().toString();
+        
+        // Skip hidden files and directories
+        if (fileName.startsWith(".")) {
+            return false;
+        }
+        
+        // Check for code file extensions
+        return fileName.endsWith(".java") ||
+                fileName.endsWith(".py") ||
+                fileName.endsWith(".js") ||
+                fileName.endsWith(".ts") ||
+                fileName.endsWith(".jsx") ||
+                fileName.endsWith(".tsx") ||
+                fileName.endsWith(".html") ||
+                fileName.endsWith(".xml") ||
+                fileName.endsWith(".properties") ||
+                fileName.endsWith(".yml") ||
+                fileName.endsWith(".yaml") ||
+                fileName.endsWith(".json") ||
+                fileName.endsWith(".sql") ||
+                fileName.endsWith(".c") ||
+                fileName.endsWith(".cpp") ||
+                fileName.endsWith(".h") ||
+                fileName.endsWith(".cs") ||
+                fileName.endsWith(".go") ||
+                fileName.endsWith(".rs") ||
+                fileName.endsWith(".kt") ||
+                fileName.endsWith(".kts") ||
+                fileName.endsWith(".groovy") ||
+                fileName.endsWith(".scala") ||
+                fileName.endsWith(".rb") ||
+                fileName.endsWith(".php");
+    }
+    
+    /**
+     * Determines if a file is a binary file.
+     */
+    private boolean isBinaryFile(Path filePath) {
+        String fileName = filePath.getFileName().toString().toLowerCase();
+        if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || 
+            fileName.endsWith(".png") || fileName.endsWith(".gif") || 
+            fileName.endsWith(".pdf") || fileName.endsWith(".zip") || 
+            fileName.endsWith(".jar") || fileName.endsWith(".class") ||
+            fileName.endsWith(".exe") || fileName.endsWith(".bin") ||
+            fileName.endsWith(".so") || fileName.endsWith(".dll") ||
+            fileName.endsWith(".jks") || fileName.endsWith(".war")) {
+            return true;
+        }
+        
+        // For files without clear binary extensions, check content
+        try {
+            byte[] bytes = Files.readAllBytes(filePath);
+            // Small sample size for efficiency
+            int sampleSize = Math.min(bytes.length, 1000);
+            
+            // Check for null bytes or high number of non-ASCII chars
+            int nonTextChars = 0;
+            for (int i = 0; i < sampleSize; i++) {
+                // Null byte is a strong indicator of binary content
+                if (bytes[i] == 0) {
+                    return true;
+                }
+                
+                // Count characters outside normal text range
+                if (bytes[i] < 7 || bytes[i] > 127) {
+                    nonTextChars++;
+                }
+            }
+            
+            // If more than 30% of the sample characters are non-text, consider it binary
+            return (nonTextChars * 100 / sampleSize) > 30;
+            
+        } catch (IOException e) {
+            logger.warn("Error checking if file is binary: {}", filePath, e);
+            // Assume binary if we can't read it properly
+            return true;
+        }
+    }
+    
+    /**
+     * Searches for code snippets matching the query.
+     * 
+     * @param query The search query
+     * @param maxResults Maximum number of results to return
+     * @return List of matching code snippets
+     */
+    @Override
+    public List<CodeSnippet> searchCode(String query, int maxResults) {
+        if (contentRetrievalService != null) {
+            logger.info("Using enhanced retrieval for code search: {}", query);
+            return searchCodeWithEnhancedRetrieval(query, maxResults);
+        } else {
+            logger.info("Using default approach for code search: {}", query);
+            return searchCodeWithDefaultApproach(query, maxResults);
+        }
+    }
+    
+    /**
+     * Enhanced search approach using the ContentRetrievalService with path-level context.
+     */
+    private List<CodeSnippet> searchCodeWithEnhancedRetrieval(String query, int maxResults) {
+        try {
+            logger.info("Enhanced retrieval search for: {} with max results: {}", query, maxResults);
+            
+            // Preprocess query for better results
+            String preprocessedQuery = preprocessQuery(query);
+            
+            // Create a proper retrieval query
+            RetrievalQuery retrievalQuery = RetrievalQuery.textOnly(
+                    preprocessedQuery, "code");
+            
+            // Execute the search using the content retrieval service
+            List<String> resultIds = contentRetrievalService.retrieveContent(
+                    retrievalQuery, 
+                    vectorStoreService.getAllEmbeddings(),
+                    vectorStoreService.getAllMetadata(),
+                    maxResults, 
+                    "hybrid");  // Use hybrid search by default
+            
+            List<CodeSnippet> results = new ArrayList<>();
+            
+            // Track any unresolved file paths that need full resolution
+            Set<String> unresolvedPaths = new HashSet<>();
+            
+            // Convert the results to code snippets
+            for (String id : resultIds) {
+                VectorStoreService.EmbeddingMetadata metadata = vectorStoreService.getMetadata(id);
+                if (metadata != null) {
+                    CodeSnippet snippet = new CodeSnippet();
+                    snippet.setFilePath(metadata.getFilePath());
+                    
+                    // Check if file path seems to be unknown or incomplete
+                    if (metadata.getFilePath() == null || 
+                        metadata.getFilePath().isEmpty() || 
+                        metadata.getFilePath().contains("[unknown]")) {
+                        unresolvedPaths.add(id);
+                    }
+                    
+                    snippet.setSnippet(metadata.getContent());
+                    snippet.setStartLine(metadata.getStartLine());
+                    snippet.setEndLine(metadata.getEndLine());
+                    
+                    // Get similarity score
+                    float similarity = vectorStoreService.getSimilarity(id, preprocessedQuery);
+                    snippet.setRelevance(similarity);
+                    
+                    // Copy metadata to the snippet
+                    Map<String, String> snippetMetadata = new HashMap<>();
+                    
+                    // Include description information if available
+                    if (metadata.getDescription() != null) {
+                        snippetMetadata.put("description", metadata.getDescription());
+                    }
+                    
+                    if (metadata.getPurposeSummary() != null) {
+                        snippetMetadata.put("purposeSummary", metadata.getPurposeSummary());
+                    }
+                    
+                    if (metadata.getCapabilities() != null) {
+                        snippetMetadata.put("capabilities", String.join(", ", metadata.getCapabilities()));
+                    }
+                    
+                    if (metadata.getUsageExamples() != null && !metadata.getUsageExamples().isEmpty()) {
+                        snippetMetadata.put("usageExamples", String.join("\n\n", metadata.getUsageExamples()));
+                    }
+                    
+                    // Add path-level explanation and hierarchy information
+                    if (metadata.getFilePath() != null && !metadata.getFilePath().isEmpty() && 
+                            !metadata.getFilePath().contains("[unknown]")) {
+                        try {
+                            // Generate path-level explanation if not already available
+                            if (metadata.getDescription() == null || metadata.getDescription().isEmpty()) {
+                                Map<String, Object> pathExplanation = 
+                                
+                                // Add architectural explanation
+                                if (pathExplanation.containsKey("architecturalExplanation")) {
+                                    snippetMetadata.put("architecturalExplanation", 
+                                        pathExplanation.get("architecturalExplanation").toString());
+                                }
+                                
+                                // Add architectural role
+                                if (pathExplanation.containsKey("architecturalRole")) {
+                                    snippetMetadata.put("architecturalRole", 
+                                        pathExplanation.get("architecturalRole").toString());
+                                }
+                                
+                                // If we didn't have a description before, add it from the path explanation
+                                if ((metadata.getDescription() == null || metadata.getDescription().isEmpty()) && 
+                                        pathExplanation.containsKey("description")) {
+                                    snippetMetadata.put("description", pathExplanation.get("description").toString());
+                                }
+                            }
+                            
+                            // Add path hierarchy information
+                            Map<String, Object> pathHierarchy = 
+                            
+                            if (pathExplanation.containsKey("isParentComponent")) {
+                                snippetMetadata.put("isParentComponent", 
+                                    pathExplanation.get("isParentComponent").toString());
+                            }
+                            
+                            if (pathExplanation.containsKey("pathComponents")) {
+                                @SuppressWarnings("unchecked")
+                                List<String> components = (List<String>)pathExplanation.get("pathComponents");
+                                snippetMetadata.put("pathHierarchy", String.join(" > ", components));
+                            }
+                        } catch (Exception e) {
+                            logger.warn("Error generating path-level explanation for {}: {}", 
+                                metadata.getFilePath(), e.getMessage());
+                        }
+                    }
+                    
+                    // Add the full path context
+                    if (metadata.getFilePath() != null && !metadata.getFilePath().isEmpty()) {
+                        // Get the full file content to provide complete context
+                        Optional<String> fullFileContent = getFileContent(metadata.getFilePath());
+                        if (fullFileContent.isPresent()) {
+                            snippetMetadata.put("fullPathContext", "Full path: " + metadata.getFilePath());
+                            
+                            // Don't add the entire file content as it could be too large,
+                            // but store a reference that we have the full file available
+                            snippetMetadata.put("hasFullFile", "true");
+                        }
+                    }
+                    
+                    // Extract and add log information
+                    try {
+                        List<LogExtractor.LogMetadata> extractedLogs = LogExtractor.extractLogs(metadata.getContent());
+                        if (!extractedLogs.isEmpty()) {
+                            StringBuilder logBuilder = new StringBuilder();
+                            for (LogExtractor.LogMetadata log : extractedLogs) {
+                                logBuilder.append("- ")
+                                        .append("[").append(log.getType()).append("] ")
+                                        .append("Line ").append(log.getLine()).append(": ")
+                                        .append(log.getMessage()).append("\n");
+                            }
+                            snippetMetadata.put("logs", logBuilder.toString());
+                        }
+                    } catch (Exception e) {
+                        logger.warn("Error extracting logs: {}", e.getMessage());
+                    }
+                    
+                    snippet.setMetadata(snippetMetadata);
+                    results.add(snippet);
+                }
+            }
+            
+            // Attempt to resolve any unknown file paths by checking for matching code
+            if (!unresolvedPaths.isEmpty()) {
+                resolveUnknownFilePaths(unresolvedPaths, results);
+            }
+            
+            // Calculate confidence scores based on multiple factors
+            recalculateConfidenceScores(results, query);
+            
+            // Sort by relevance
+            results.sort((a, b) -> Float.compare(b.getRelevance(), a.getRelevance()));
+            
+            logger.info("Enhanced retrieval found {} relevant code snippets", results.size());
+            return results;
+        } catch (Exception e) {
+            logger.error("Error in enhanced code search", e);
+            // Fallback to the default approach
+            return searchCodeWithDefaultApproach(query, maxResults);
+        }
+    }
+    
+    /**
+     * Attempts to resolve unknown file paths by matching code content against the repository.
+     */
+    private void resolveUnknownFilePaths(Set<String> unresolvedPaths, List<CodeSnippet> results) {
+        logger.info("Attempting to resolve {} unknown file paths", unresolvedPaths.size());
+        
+        for (String id : unresolvedPaths) {
+            VectorStoreService.EmbeddingMetadata metadata = vectorStoreService.getMetadata(id);
+            if (metadata != null && metadata.getContent() != null) {
+                String codeToMatch = metadata.getContent().trim();
+                
+                // Skip if too small to reliably match
+                if (codeToMatch.length() < 20) {
+                    continue;
+                }
+                
+                try {
+                    // Search for matching code in the repository
+                    Optional<String> resolvedPath = findFilePathByCodeContent(codeToMatch);
+                    
+                    if (resolvedPath.isPresent()) {
+                        String path = resolvedPath.get();
+                        logger.info("Resolved unknown path for ID {} to {}", id, path);
+                        
+                        // Update metadata in vector store
+                        metadata.setFilePath(path);
+                        vectorStoreService.updateMetadata(id, metadata);
+                        
+                        // Update results
+                        for (CodeSnippet snippet : results) {
+                            if (snippet.getSnippet().trim().equals(codeToMatch)) {
+                                snippet.setFilePath(path);
+                                
+                                // Update the metadata as well
+                                Map<String, String> snippetMetadata = snippet.getMetadata();
+                                if (snippetMetadata == null) {
+                                    snippetMetadata = new HashMap<>();
+                                }
+                                snippetMetadata.put("fullPathContext", "Full path: " + path);
+                                snippetMetadata.put("pathResolutionMethod", "content_matching");
+                                
+                                // Get the full file content
+                                Optional<String> fullFileContent = getFileContent(path);
+                                if (fullFileContent.isPresent()) {
+                                    snippetMetadata.put("hasFullFile", "true");
+                                }
+                                
+                                snippet.setMetadata(snippetMetadata);
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.warn("Error resolving file path for {}: {}", id, e.getMessage());
+                }
+            }
+        }
+    }
+    
+    /**
+     * Searches the repository to find a file containing the given code content.
+     */
+    private Optional<String> findFilePathByCodeContent(String codeContent) throws IOException {
+        String normalizedContent = codeContent.trim().replaceAll("\\s+", " ");
+        
+        List<Path> codeFiles = findAllCodeFiles();
+        for (Path filePath : codeFiles) {
+            try {
+                String fileContent = Files.readString(filePath);
+                String normalizedFileContent = fileContent.replaceAll("\\s+", " ");
+                
+                if (normalizedFileContent.contains(normalizedContent)) {
+                    String relativePath = Paths.get(baseCodePath).relativize(filePath).toString();
+                    return Optional.of(relativePath);
+                }
+            } catch (IOException e) {
+                // Skip files that can't be read
+                continue;
+            }
+        }
+        
+        return Optional.empty();
+    }
+    
+    /**
+     * Recalculates confidence scores for search results based on multiple factors.
+     */
+    private void recalculateConfidenceScores(List<CodeSnippet> results, String query) {
+        // Extract key terms from the query for keyword matching
+        Set<String> queryTerms = extractQueryTerms(query);
+        
+        for (CodeSnippet snippet : results) {
+            float baseScore = snippet.getRelevance();
+            
+            // Start with the base similarity score
+            float confidence = baseScore;
+            
+            // 1. Adjust based on description match quality
+            Map<String, String> metadata = snippet.getMetadata();
+            if (metadata != null) {

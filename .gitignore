@@ -1,0 +1,37 @@
+# Exclude nested git repositories
+data/code/
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.logs
+target/
+.mvn/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Configuration files with sensitive data
+application-*.properties
+application-*.yml
+!application.properties
+!application.yml
+
+# Caches
+.gradle/
+build/ 

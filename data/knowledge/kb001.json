@@ -1,0 +1,9 @@
+{
+  "articleId": "KB001",
+  "title": "Resolving NullPointerException in TaskProcessor",
+  "content": "## Issue\nTasks may fail with a NullPointerException in the TaskProcessor.execute method, typically at line 245. This occurs when processing tasks with missing configuration parameters.\n\n## Root Cause\nThe TaskProcessor assumes that all task configurations contain a 'targetSystem' field. When this field is missing, a NullPointerException is thrown during execution.\n\n## Solution\n1. Check if the task configuration includes the required 'targetSystem' field\n2. Add validation in the TaskProcessor to gracefully handle missing fields\n3. Update task definitions to ensure all required parameters are specified\n\n## Prevention\n- Always include all required fields in task configurations\n- Use the TaskConfigurationValidator before submitting tasks\n- Monitor task failure logs for patterns of this exception",
+  "tags": ["TaskProcessor", "NullPointerException", "dp-dynamic-tasks", "error-handling", "configuration"],
+  "createdAt": "2023-01-15T10:00:00Z",
+  "updatedAt": "2023-05-20T15:30:00Z",
+  "author": "Support Team"
+} 
