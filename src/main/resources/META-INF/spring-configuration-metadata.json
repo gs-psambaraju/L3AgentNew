@@ -1,0 +1,119 @@
+{
+  "groups": [
+    {
+      "name": "l3agent.confidence",
+      "type": "com.l3agent.config.ConfidenceConfig",
+      "sourceType": "com.l3agent.config.ConfidenceConfig",
+      "description": "Confidence rating calculation configuration properties."
+    },
+    {
+      "name": "l3agent.llm",
+      "description": "LLM provider configuration properties."
+    },
+    {
+      "name": "l3agent.vector-store",
+      "description": "Vector storage configuration properties."
+    },
+    {
+      "name": "l3agent.mcp",
+      "description": "Model Control Plane configuration properties."
+    }
+  ],
+  "properties": [
+    {
+      "name": "l3agent.confidence.vector-search-weight",
+      "type": "java.lang.Double",
+      "description": "Weight for vector search component in confidence calculation (0.0-1.0).",
+      "sourceType": "com.l3agent.config.ConfidenceConfig",
+      "defaultValue": 0.40
+    },
+    {
+      "name": "l3agent.confidence.tool-execution-weight",
+      "type": "java.lang.Double",
+      "description": "Weight for tool execution component in confidence calculation (0.0-1.0).",
+      "sourceType": "com.l3agent.config.ConfidenceConfig",
+      "defaultValue": 0.30
+    },
+    {
+      "name": "l3agent.confidence.evidence-quality-weight",
+      "type": "java.lang.Double",
+      "description": "Weight for evidence quality component in confidence calculation (0.0-1.0).",
+      "sourceType": "com.l3agent.config.ConfidenceConfig",
+      "defaultValue": 0.20
+    },
+    {
+      "name": "l3agent.confidence.query-clairty-weight",
+      "type": "java.lang.Double",
+      "description": "Weight for query clarity component in confidence calculation (0.0-1.0).",
+      "sourceType": "com.l3agent.config.ConfidenceConfig",
+      "defaultValue": 0.10
+    },
+    {
+      "name": "l3agent.confidence.very-high-threshold",
+      "type": "java.lang.Double",
+      "description": "Threshold for Very High confidence rating (0.0-1.0).",
+      "sourceType": "com.l3agent.config.ConfidenceConfig",
+      "defaultValue": 0.90
+    },
+    {
+      "name": "l3agent.confidence.high-threshold",
+      "type": "java.lang.Double",
+      "description": "Threshold for High confidence rating (0.0-1.0).",
+      "sourceType": "com.l3agent.config.ConfidenceConfig",
+      "defaultValue": 0.75
+    },
+    {
+      "name": "l3agent.confidence.medium-threshold",
+      "type": "java.lang.Double",
+      "description": "Threshold for Medium confidence rating (0.0-1.0).",
+      "sourceType": "com.l3agent.config.ConfidenceConfig",
+      "defaultValue": 0.50
+    },
+    {
+      "name": "l3agent.confidence.low-threshold",
+      "type": "java.lang.Double",
+      "description": "Threshold for Low confidence rating (0.0-1.0).",
+      "sourceType": "com.l3agent.config.ConfidenceConfig",
+      "defaultValue": 0.25
+    },
+    {
+      "name": "l3agent.llm.provider",
+      "type": "java.lang.String",
+      "description": "LLM provider to use (openai, gainsight).",
+      "defaultValue": "openai"
+    },
+    {
+      "name": "l3agent.llm.model",
+      "type": "java.lang.String",
+      "description": "LLM model to use (e.g., gpt-4, gpt-4o).",
+      "defaultValue": "gpt-4"
+    },
+    {
+      "name": "l3agent.vector-store.engine",
+      "type": "java.lang.String",
+      "description": "Vector store engine to use (hnswlib, faiss, etc).",
+      "defaultValue": "hnswlib"
+    },
+    {
+      "name": "l3agent.database.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether database functionality is enabled.",
+      "defaultValue": true
+    }
+  ],
+  "hints": [
+    {
+      "name": "l3agent.llm.provider",
+      "values": [
+        {
+          "value": "openai",
+          "description": "OpenAI API provider."
+        },
+        {
+          "value": "gainsight",
+          "description": "Gainsight API provider."
+        }
+      ]
+    }
+  ]
+} 
